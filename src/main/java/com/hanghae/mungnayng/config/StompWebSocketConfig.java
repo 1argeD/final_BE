@@ -15,16 +15,16 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/wss")
-                .setAllowedOriginPatterns("*")
+        registry.addEndpoint("/wss")/*https통신으로 소켓 연결을 해야함으로 wss로 통신함.*/
+                .setAllowedOriginPatterns("*")/*cors를 해결헤 주기 위해서 */
                 .withSockJS();
 
     }
-
+/*stomp의 메세지 브로커 기능을 활용*/
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/pub");
-        registry.enableSimpleBroker("/sub");
+        registry.setApplicationDestinationPrefixes("/pub");/*해당 메세지를 송신*/
+        registry.enableSimpleBroker("/sub");/*메세지를 수신할 부분*/
     }
 
 }

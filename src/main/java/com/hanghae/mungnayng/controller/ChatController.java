@@ -25,22 +25,14 @@ public class ChatController {
     private final RoomInfoRepository roomInfoRepository;
     private final RoomDetailRepository roomDetailRepository;
     private final ChatService chatService;
-    /*채팅방과 연결*/
+    /*채팅내역 불러오기*/
     @GetMapping("/room/{itemId}")
     public ResponseEntity<?> getRoomChat(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                          @PathVariable Long itemId) {
         Member member = userDetails.getMember();
         RoomDetail roomDetail = roomDetailRepository.findByMember_MemberIdAndItem_Id(member.getMemberId(), itemId)
-                .orElseThrow();
-    List<ChatDto> chats = chatService.getChat(roomDetail.getRoomInfo());
+                .orElseThrow();/*아이템의 아이디 값과 맴버의 아이디 값이 일치 하지 않으면 채팅방의 채팅 내용을 불러오지 않음*/
+    List<ChatDto> chats = chatService.getChat(roomDetail.getRoomInfo());/*채탱방 채팅내역 불러오기*/
         return ResponseEntity.ok().body(chats);
     }
 }
-
-//    @GetMapping("/chat")
-//    public String chatGET(){
-//
-//        log.info("@ChatController, chat GET()");
-//
-//        return "chat";
-//    }

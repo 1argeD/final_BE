@@ -30,7 +30,7 @@ public class RedisRepository {
             topicMap.put(c.getId().toString(), topic);
         }
     }
-
+/*roomService에서  전달받은 roomId를 업데이트 해줌*/
     public void subscribe(String roomId) {
         ChannelTopic topic = topicMap.get(roomId);
         if (topic == null) {
@@ -39,7 +39,7 @@ public class RedisRepository {
             topicMap.put(roomId, topic);
         }
     }
-
+/*실질적으로 메세지를 subscribe할 roomId를 불러옴*/
     public ChannelTopic getTopic(String roomId) {
         return topicMap.get(roomId);
     }

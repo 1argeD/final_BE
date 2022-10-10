@@ -4,7 +4,6 @@ import com.hanghae.mungnayng.Redis.RedisPub;
 import com.hanghae.mungnayng.domain.Room.Dto.RoomInfoResponseDto;
 import com.hanghae.mungnayng.domain.Room.Dto.RoomInviteDto;
 import com.hanghae.mungnayng.domain.chat.dto.ChatDto;
-import com.hanghae.mungnayng.repository.ChatRepository;
 import com.hanghae.mungnayng.repository.RedisRepository;
 import com.hanghae.mungnayng.repository.RoomInfoRepository;
 import com.hanghae.mungnayng.service.ChatService;
@@ -32,7 +31,6 @@ public class StompChatController {
     private final RedisRepository redisRepository;
 
     private final RedisPub redisPub;
-    private final ChatRepository chatRepository;
 
     //Client가 SEND할 수 있는 경로
     //stompConfig에서 설정한 applicationDestinationPrefixes와 @MessageMapping 경로가 병합됨
@@ -52,7 +50,7 @@ public class StompChatController {
         message = chatService.saveChat(Long.valueOf(roomId), message);
         log.info("pub success" + message.getContent());
 //        template.convertAndSend("/sub/chat/room/" + roomId, message); /*채팅방으로*/
-        redisPub.publish(redisRepository.getTopic(roomId), message);
+        redisPub.publish(redisRepository.getTopic(roomId), message);/*redis를 통해서 메세지 전달*/
     }
 
     @MessageMapping(value = "/room/founder/{memberId}")

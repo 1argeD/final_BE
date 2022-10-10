@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class RoomService {
     private final ItemRepository itemRepository;
 
     @Transactional
-    public RoomInfoResponseDto createRoom(String nickname, Long me, Long memberId,Long itemId, String title) {
+    public RoomInfoResponseDto createRoom(String nickname, Long me, Long memberId, Long itemId, String title) {
         Member member = memberRepository.findById(me).orElseThrow();
 //        if(me.equals( memberId)) throw new IllegalArgumentException( "자신의 게시글 입니다.");
 
@@ -44,9 +43,10 @@ public class RoomService {
     @Transactional
     public RoomInfoResponseDto createRoom(Member member, RoomInfoRequestDto requestDto) {
         Item item = itemRepository.findById(requestDto.getItemId())
-                .orElseThrow(()-> new IllegalArgumentException("해당하는 게시글이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 게시글이 없습니다."));
+        /*roomDetail을 통해서 맴버의 아이디 값과, 아이템의 아이디값을 조회에 있는 채팅 방일 경우 기존의 채팅 방을 아닐경우 새로운 채팅방을 생성함*/
         RoomDetail room = roomDetailsRepository.findByMember_MemberIdAndItem_Id(member.getMemberId(), requestDto.getItemId())/*맴버와 아이템 아이디 값이 없으면 빌드실행*/
-                .orElseGet(() ->{
+                .orElseGet(() -> {
                     RoomInfo roomInfo = RoomInfo.builder()
                             .member(member)
                             .item(item)
@@ -62,14 +62,13 @@ public class RoomService {
 
                     roomInfo.getRoomDetail().add(roomDetail);
                     roomInfoRepository.save(roomInfo);
-                    redisRepository.subscribe(roomInfo.getId().toString());
-
+                    redisRepository.subscribe(roomInfo.getId().toString());/*redis레파지토리에서 subscribe할 roomId값을 전달함*/
                     return roomDetail;
                 });
         return RoomInfoResponseDto.Info(room);
     }
 
-
+/*최근에 읽은 채팅 내역 업데이트*/
     @Transactional
     public void updateLastReadChat(Long roomId, Long memberId, Long itemId) {
         RoomDetail detail = roomDetailsRepository.findByRoomInfo_IdAndMember_MemberIdAndItem_Id(roomId, memberId, itemId)
@@ -87,27 +86,15 @@ public class RoomService {
         Member member = memberRepository.findById(Long.parseLong(memberId)).orElseThrow();
         return getRoomInfo(member);
     }
-
+    /*방 리스트 전체 전달*/
     @Transactional(readOnly = true)
     public List<RoomInfoResponseDto> getRoomInfo(Member member) {
-        List<RoomDetail> allByOrderByModifiedAtDesc =  roomDetailsRepository.findAllByMemberOrderByModifiedAtDesc(member);
+        List<RoomDetail> allByOrderByModifiedAtDesc = roomDetailsRepository.findAllByMemberOrderByModifiedAtDesc(member);
         return allByOrderByModifiedAtDesc.stream()
                 .map(RoomInfoResponseDto::Info)
                 .collect(Collectors.toList());
-
-        /*차후 채팅창 연결시 필요 할 수도 있으니 주석처리 함.*/
-//                List<RoomInfoResponseDto> dtos = new ArrayList<>();
-//
-//                for (RoomInfo roomInfo : allByOrderByModifiedAtDesc) {
-//                        Long roomInfoId = roomInfo.getId();
-//                        String nickname = member.getNickname();
-//                        String createdAt = String.valueOf(roomInfo.getCreatedAt());
-//
-//                        RoomInfoResponseDto responseDto = new RoomInfoResponseDto(roomInfoId, nickname,createdAt);
-//                        dtos.add(responseDto);
-//                }
     }
-
+/*방나가기*/
     @Transactional
     public void deleteRoomInfo(Member member, Long roomInfoId) {
         RoomInfo roomInfo = roomInfoRepository.findById(roomInfoId)
@@ -122,18 +109,19 @@ public class RoomService {
         Member member = memberRepository.findById(memberId).orElseThrow();
         inviteRoom(member, roomId, inviteDto);
     }
-
+/*같이 방을 생성할 대상 초대 */
     public void inviteRoom(Member me, Long roomInfoId, RoomInviteDto inviteDto) {
         RoomInfo roomInfo = roomInfoRepository.findById(roomInfoId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅창 입니다."));
         Member member = memberRepository.findById(inviteDto.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("초대 대상이 올바르지 않습니다."));
-        log.info(member.toString());
+        if (me.getNickname().equals(roomInfo.getNickname()))
+            throw new IllegalArgumentException("자신의 게시글 입니다.");
         Item item = itemRepository.findById(inviteDto.getItemId())
-                .orElseThrow(()-> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
         log.info(item.toString());
-        RoomDetail roomDetail = roomDetailsRepository.findByRoomInfo_IdAndMember_MemberIdAndItem_Id(roomInfoId, inviteDto.getMemberId(),inviteDto.getItemId())
-                .orElse(new RoomDetail(roomInfo, member, item));
+        RoomDetail roomDetail = roomDetailsRepository.findByRoomInfo_IdAndMember_MemberIdAndItem_Id(roomInfoId, inviteDto.getMemberId(), inviteDto.getItemId())
+                .orElse(new RoomDetail(roomInfo, member, item));/*roomDetail의 정보 업데이트*/
 
         roomDetailsRepository.save(roomDetail);
 

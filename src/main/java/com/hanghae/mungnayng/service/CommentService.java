@@ -40,6 +40,7 @@ public class CommentService {
                 .build();
 
         commentRepository.save(comment);
+        /*코멘트 이벤트가 발생시 댓글에 해당하는 알림을 생성 후 전달 */
     List<Member> memberList = new ArrayList<>();
         for (Member u : memberList) {
             if(u == member) {

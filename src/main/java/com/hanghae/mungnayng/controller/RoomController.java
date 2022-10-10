@@ -1,7 +1,6 @@
 package com.hanghae.mungnayng.controller;
 
 import com.hanghae.mungnayng.domain.Room.Dto.RoomInfoRequestDto;
-import com.hanghae.mungnayng.domain.Room.Dto.RoomInfoResponseDto;
 import com.hanghae.mungnayng.domain.Room.Dto.RoomInviteDto;
 import com.hanghae.mungnayng.domain.Room.RoomInfo;
 import com.hanghae.mungnayng.domain.UserDetailsImpl;
@@ -16,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -40,8 +38,7 @@ public class RoomController {
     @GetMapping(value = "/roomInfo")
     public ResponseEntity<?> getRoomInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Member member = userDetails.getMember();
-        List<RoomInfoResponseDto> ResponseDtos = roomService.getRoomInfo(member);
-        return ResponseEntity.ok().body(ResponseDtos);
+        return ResponseEntity.ok().body(roomService.getRoomInfo(member));
     }
 
     @ApiOperation(value = "채팅방 나가기")
